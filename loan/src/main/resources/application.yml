@@ -1,0 +1,60 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: loan
+    
+  profiles:
+    active: prod
+    
+  data:
+    mongodb:
+      uri: mongodb://${MONGODB_HOST_NAME:localhost}:27017/loan_service_db
+      
+  config:
+    import: optional:configserver:http://localhost:8071/
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url: 
+      defaultZone: http://localhost:9000/eureka/ 
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  info:
+    env:
+      enabled: true  
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    
+info:
+  app: 
+    name: Loan Microservice
+    description: Vicheak Bank Loan App
+    version: 1.0.0
+
+logging:
+  level:
+    '[com.vicheak.bank.loan]': DEBUG
+  pattern:
+    level: "%5p [${spring.application.name},%X{trace_id},%X{span_id}]"

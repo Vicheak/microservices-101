@@ -1,0 +1,129 @@
+version: "3.8"
+
+services: 
+   configserver:
+      image: vicheak/configserver:latest
+      container_name: configserver
+      mem_limit: 700m
+      ports:
+        - "8000:8071"
+      networks:
+        - vicheaknetwork
+
+   eurekaserver:
+      image: vicheak/eurekaserver:latest
+      container_name: eurekaserver
+      ports:
+        - "9000:9000"
+      networks: 
+        - vicheaknetwork
+
+   account_service:
+      image: vicheak/account_service:latest
+      container_name: account_service
+      mem_limit: 700m
+      ports:
+         - "7000:8080"
+      networks:
+         - vicheaknetwork
+      depends_on:
+         - configserver
+      deploy:
+         restart_policy:
+            condition: on-failure
+            delay: 20s
+            max_attempts: 3
+            window: 120s
+      environment:
+         SPRING_PROFILES_ACTIVE: prod
+         SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+  
+   card_service:
+      image: vicheak/card_service:latest
+      container_name: card_service
+      ports: 
+        - "5000:8070"
+      networks: 
+        - vicheaknetwork
+      environment: 
+         SPRING_PROFILES_ACTIVE: prod
+      
+   loan_service_1:
+      image: vicheak/loan_service:latest
+      container_name: loan_service_1
+      environment:
+         SERVER_PORT: 8090
+         SPRING_PROFILES_ACTIVE: prod
+      ports:
+        - "6000:8090"
+      networks:
+        - vicheaknetwork
+
+   loan_service_2:
+      image: vicheak/loan_service:latest
+      container_name: loan_service_2
+      environment:
+         SERVER_PORT: 8091
+         SPRING_PROFILES_ACTIVE: prod
+      ports:
+        - "6001:8091"
+      networks:
+        - vicheaknetwork
+
+   pg_admin:
+      image: dpage/pgadmin4:6
+      container_name: pg_admin_service
+      environment:
+          - PGADMIN_DEFAULT_EMAIL=admin@gmail.com
+          - PGADMIN_DEFAULT_PASSWORD=admin@123
+          - PGADMIN_LISTEN_PORT=5050
+      ports:
+          - "5050:5050"
+      networks:
+          - vicheaknetwork
+
+   account_db:
+      image: postgres:14-alpine
+      container_name: account_db
+      environment:
+          - POSTGRES_USER=account
+          - POSTGRES_PASSWORD=account@123
+          - POSTGRES_DB=account_service_db
+      ports:
+          - "5438:5432"
+      networks:
+          - vicheaknetwork
+      volumes:
+          - data:/var/lib/postgresql/data 
+
+   card_db:
+      image: mongo:jammy
+      container_name: card_db
+      environment:
+          - MONGO_INITDB_DATABASE=card_service_db
+      ports:
+          - "27018:27017"
+      networks:
+          - vicheaknetwork
+      volumes:
+          - mongodb_data_1:/data/db
+
+   loan_db:
+      image: mongo:jammy
+      container_name: loan_db
+      environment:
+          - MONGO_INITDB_DATABASE=loan_service_db
+      ports:
+          - "27019:27017"
+      networks:
+          - vicheaknetwork 
+      volumes:
+          - mongodb_data_2:/data/db
+ 
+networks:
+    vicheaknetwork:
+
+volumes:
+    data:
+    mongodb_data_1:
+    mongodb_data_2:

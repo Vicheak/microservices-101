@@ -1,0 +1,138 @@
+version: "3.8"
+
+services: 
+   configserver:
+      image: vicheak/configserver:latest
+      container_name: configserver
+      mem_limit: 700m
+      ports:
+        - "8000:8071"
+      networks:
+        - vicheaknetwork
+    
+   eurekaserver:
+      image: vicheak/eurekaserver:latest
+      container_name: eurekaserver
+      mem_limit: 700m
+      ports:
+        - "9000:9000"
+      networks:
+        - vicheaknetwork
+      depends_on:
+         - configserver
+      deploy:
+         restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
+      environment:
+         SPRING_PROFILES_ACTIVE: default
+         SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+
+   account_service:
+      image: vicheak/account_service:latest
+      container_name: account_service
+      mem_limit: 700m
+      ports:
+         - "7000:8080"
+      networks:
+         - vicheaknetwork
+      depends_on:
+         - configserver
+         - eurekaserver
+      deploy:
+         restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
+      environment:
+         SPRING_PROFILES_ACTIVE: prod
+         SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+         EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:9000/eureka/
+
+   loan_service_1:
+      image: vicheak/loan_service:latest
+      container_name: loan_service_1
+      mem_limit: 700m
+      ports:
+         - "6000:8090"
+      networks:
+         - vicheaknetwork
+      depends_on:
+         - configserver
+         - eurekaserver
+         - mongodb
+      deploy:
+         restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
+      environment:
+         SERVER_PORT: 8090
+         SPRING_PROFILES_ACTIVE: prod
+         SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+         EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:9000/eureka/
+         MONGODB_HOST_NAME: mongodb
+
+   loan_service_2:
+      image: vicheak/loan_service:latest
+      container_name: loan_service_2
+      mem_limit: 700m
+      ports:
+         - "6001:8091"
+      networks:
+         - vicheaknetwork
+      depends_on:
+         - configserver
+         - eurekaserver
+         - mongodb
+      deploy:
+         restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
+      environment:
+         SERVER_PORT: 8091
+         SPRING_PROFILES_ACTIVE: prod
+         SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+         EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:9000/eureka/
+         MONGODB_HOST_NAME: mongodb
+
+   card_service:
+      image: vicheak/card_service:latest
+      container_name: card_service
+      mem_limit: 700m
+      ports:
+         - "5000:8070"
+      networks:
+         - vicheaknetwork
+      depends_on:
+         - configserver
+         - eurekaserver
+         - mongodb
+      deploy:
+         restart_policy:
+            condition: on-failure
+            delay: 5s
+            max_attempts: 3
+            window: 120s
+      environment:
+         SPRING_PROFILES_ACTIVE: prod
+         SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+         EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:9000/eureka/
+         MONGODB_HOST_NAME: mongodb
+
+   mongodb:
+      image: mvertes/alpine-mongo:latest
+      container_name: mongodb
+      ports: 
+         - "7777:27017"
+      networks:
+         - vicheaknetwork
+
+networks:
+    vicheaknetwork:

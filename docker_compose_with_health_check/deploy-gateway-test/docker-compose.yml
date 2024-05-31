@@ -1,0 +1,108 @@
+version: "3.8"
+
+services: 
+   rabbit:                  
+      image: rabbitmq:3.12-management
+      container_name: rabbitmq
+      hostname: rabbitmq
+      healthcheck:
+         test: rabbitmq-diagnostics check_port_connectivity
+         interval: 10s
+         timeout: 5s
+         retries: 10
+         start_period: 10s
+      ports:
+         - "5672:5672"
+         - "15672:15672"
+      extends: 
+         file: common.yml
+         service: ms-deploy-network
+
+   configserver:
+      image: vicheakbank/configserver:v2
+      container_name: configserver
+      healthcheck:
+         test: "curl --fail --silent localhost:8071/actuator/health/readiness | grep UP || exit 1"
+         interval: 10s
+         timeout: 5s
+         retries: 10
+         start_period: 10s
+      ports:
+         - "8071:8071"
+      depends_on:
+         rabbit: 
+            condition: service_healthy
+      extends: 
+         file: common.yml
+         service: ms-base
+
+   eurekaserver:
+      image: vicheakbank/eurekaserver:v2
+      container_name: eurekaserver
+      healthcheck:
+         test: "curl --fail --silent localhost:9000/actuator/health/readiness | grep UP || exit 1"
+         interval: 10s
+         timeout: 5s
+         retries: 10
+         start_period: 15s
+      ports:
+         - "9000:9000"
+      environment:
+         EUREKA_INSTANCE_HOSTNAME: eurekaserver
+      extends: 
+         file: common.yml
+         service: ms-base-configserver
+   
+   gatewayserver:
+      image: vicheakbank/gatewayserver:v2
+      container_name: gatewayserver
+      ports:
+         - "8072:8072"
+      extends: 
+         file: common.yml
+         service: ms-base-eurekaserver
+
+   account_service:
+      image: vicheakbank/account:v2
+      container_name: account_service
+      ports:
+         - "8080:8080"
+      extends: 
+         file: common.yml
+         service: ms-base-eurekaserver
+
+   card_service:
+      image: vicheakbank/card:v2
+      container_name: card_service
+      ports:
+         - "8070:8070"
+      environment:
+         MONGODB_HOST_NAME: mongodb
+      extends: 
+         file: common.yml
+         service: ms-base-eurekaserver
+
+   loan_service:
+      image: vicheakbank/loan:v2
+      container_name: loan_service
+      ports:
+         - "8090:8090"
+      environment:
+         MONGODB_HOST_NAME: mongodb
+      extends: 
+         file: common.yml
+         service: ms-base-eurekaserver
+
+   mongodb:
+      image: mvertes/alpine-mongo:latest
+      container_name: mongodb
+      ports: 
+         - "7777:27017"
+      volumes:
+         - './data:/data/db'
+      extends: 
+         file: common.yml
+         service: ms-deploy-network
+
+networks:
+   vicheaknetwork:

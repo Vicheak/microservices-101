@@ -1,0 +1,35 @@
+services:
+  ms-deploy-network: 
+    networks:
+      - vicheaknetwork
+  
+  ms-base:
+    networks:
+      - vicheaknetwork
+    mem_limit: 700m
+    environment:
+      SPRING_RABBITMQ_HOST: rabbit
+      JAVA_TOOL_OPTIONS: "-javaagent:/app/libs/opentelemetry-javaagent-1.27.0.jar" 
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+      OTEL_METRICS_EXPORTER: none
+  
+  ms-base-configserver:
+    extends: ms-base
+    networks:
+      - vicheaknetwork
+    depends_on:
+      configserver:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: default
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+
+  ms-base-eurekaserver:
+    extends: ms-base-configserver
+    networks:
+      - vicheaknetwork
+    depends_on:
+      eurekaserver:
+        condition: service_healthy
+    environment: 
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:9000/eureka/

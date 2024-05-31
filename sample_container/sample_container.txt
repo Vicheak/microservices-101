@@ -1,0 +1,22 @@
+docker service -> docker compose version 3.8
+docker network : vicheaknetwork
+
+configserver : 8000 -> 8071
+
+eurekaserver : 9000 -> 9000
+
+account_service : 7000 -> 8080
+
+pg_admin : 5050 -> 5050
+
+account_db : 5438 -> 5432
+
+card_service : 5000 -> 8070
+
+card_db : 27018 -> 27017
+
+loan_service_1 : 6000 -> 8090
+
+loan_service_2 : 6001 -> 8091
+
+loan_db : 27019 -> 27017
