@@ -1,0 +1,34 @@
+version: "3.8"
+
+services: 
+   configserver:
+      image: vicheak/configserver:latest
+      container_name: configserver
+      mem_limit: 700m
+      ports:
+        - "8071:8071"
+      networks:
+        - vicheaknetwork
+
+   account_service:
+      image: vicheak/account_service:latest
+      container_name: account_service
+      mem_limit: 700m
+      ports:
+         - "8080:8080"
+      networks:
+         - vicheaknetwork
+      depends_on:
+         - configserver
+      deploy:
+         restart_policy:
+            condition: on-failure
+            delay: 25s
+            max_attempts: 3
+            window: 120s
+      environment:
+         SPRING_PROFILES_ACTIVE: dev
+         SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+
+networks:
+    vicheaknetwork:
