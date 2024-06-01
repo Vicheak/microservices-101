@@ -2,6 +2,7 @@ package com.vicheak.bank.account.controller;
 
 import java.util.List;
 
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.vicheak.bank.account.dto.CardResponseDTO;
 import com.vicheak.bank.account.dto.CustomerDTO;
 import com.vicheak.bank.account.dto.CustomerDetailDTO;
+import com.vicheak.bank.account.dto.CustomerMessageDTO;
 import com.vicheak.bank.account.dto.LoanResponseDTO;
 import com.vicheak.bank.account.entity.Customer;
 import com.vicheak.bank.account.mapper.CustomerMapper;
@@ -34,7 +36,7 @@ public class CustomerController {
 	private final CustomerService customerService;
 	private final CustomerMapper customerMapper; 
 	private final CardFeignClient cardFeignClient; 
-	private final LoanFeignClient loanFeignClient; 
+	private final LoanFeignClient loanFeignClient;
 
 	@PostMapping
 	public ResponseEntity<?> saveCustomer(@RequestBody CustomerDTO dto){
