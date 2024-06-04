@@ -52,4 +52,11 @@ public class CustomerServiceImpl implements CustomerService {
 				);
 	}
 
+	@Override
+	public void updateCustomerCommunication(Long id) {
+		Customer customer = getById(id); 
+		customer.setCommunicationAlreadySent(true); 
+		customerRepository.save(customer); 
+	}
+
 }
